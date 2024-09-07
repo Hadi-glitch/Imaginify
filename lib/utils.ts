@@ -1,33 +1,33 @@
 /* eslint-disable prefer-const */
 /* eslint-disable no-prototype-builtins */
 import { type ClassValue, clsx } from "clsx";
-import qs from "qs"
+import qs from "qs";
 import { twMerge } from "tailwind-merge";
-
 import { aspectRatioOptions } from "@/constants";
 
+// Utility function to merge class names
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// ERROR HANDLER
+// Error handler function
 export const handleError = (error: unknown) => {
   if (error instanceof Error) {
-    // This is a native JavaScript error (e.g., TypeError, RangeError)
+    // Handle native JavaScript errors
     console.error(error.message);
     throw new Error(`Error: ${error.message}`);
   } else if (typeof error === "string") {
-    // This is a string error message
+    // Handle string errors
     console.error(error);
     throw new Error(`Error: ${error}`);
   } else {
-    // This is an unknown type of error
+    // Handle unknown error types
     console.error(error);
     throw new Error(`Unknown error: ${JSON.stringify(error)}`);
   }
 };
 
-// PLACEHOLDER LOADER - while image is transforming
+// Placeholder loader while image is transforming
 const shimmer = (w: number, h: number) => `
 <svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
@@ -50,9 +50,14 @@ const toBase64 = (str: string) =>
 export const dataUrl = `data:image/svg+xml;base64,${toBase64(
   shimmer(1000, 1000)
 )}`;
-// ==== End
 
-// FORM URL QUERY
+// Form URL query
+interface FormUrlQueryParams {
+  searchParams: URLSearchParams;
+  key: string;
+  value: string;
+}
+
 export const formUrlQuery = ({
   searchParams,
   key,
@@ -65,7 +70,12 @@ export const formUrlQuery = ({
   })}`;
 };
 
-// REMOVE KEY FROM QUERY
+// Remove keys from query
+interface RemoveUrlQueryParams {
+  searchParams: string;
+  keysToRemove: string[];
+}
+
 export function removeKeysFromQuery({
   searchParams,
   keysToRemove,
@@ -84,20 +94,27 @@ export function removeKeysFromQuery({
   return `${window.location.pathname}?${qs.stringify(currentUrl)}`;
 }
 
-// DEBOUNCE
-export const debounce = (func: (...args: any[]) => void, delay: number) => {
-  let timeoutId: NodeJS.Timeout | null;
-  return (...args: any[]) => {
+// Debounce function
+export const debounce = (func: (...args: unknown[]) => void, delay: number) => {
+  let timeoutId: NodeJS.Timeout | null = null;
+  return (...args: unknown[]) => {
     if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func.apply(null, args), delay);
+    timeoutId = setTimeout(() => func(...args), delay);
   };
 };
 
-// GE IMAGE SIZE
+// Get image size
 export type AspectRatioKey = keyof typeof aspectRatioOptions;
+
+interface Image {
+  aspectRatio?: AspectRatioKey;
+  width?: number;
+  height?: number;
+}
+
 export const getImageSize = (
   type: string,
-  image: any,
+  image: Image,
   dimension: "width" | "height"
 ): number => {
   if (type === "fill") {
@@ -106,10 +123,10 @@ export const getImageSize = (
       1000
     );
   }
-  return image?.[dimension] || 1000;
+  return image[dimension] || 1000;
 };
 
-// DOWNLOAD IMAGE
+// Download image
 export const download = (url: string, filename: string) => {
   if (!url) {
     throw new Error("Resource URL not provided! You need to provide one");
@@ -126,32 +143,51 @@ export const download = (url: string, filename: string) => {
         a.download = `${filename.replace(" ", "_")}.png`;
       document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a); // Clean up
     })
     .catch((error) => console.log({ error }));
 };
 
-// DEEP MERGE OBJECTS
-export const deepMergeObjects = (obj1: any, obj2: any) => {
-  if(obj2 === null || obj2 === undefined) {
+// Deep merge objects
+// Deep merge objects
+// Deep merge objects
+export function deepMergeObjects<T extends Record<string, any>>(
+  obj1: T,
+  obj2: Partial<T>
+): T {
+  // Handle null or undefined cases
+  if (obj2 === null || obj2 === undefined) {
     return obj1;
   }
 
-  let output = { ...obj2 };
+  // Create a new object to avoid mutating the input
+  const output = { ...obj1 } as T;
 
-  for (let key in obj1) {
-    if (obj1.hasOwnProperty(key)) {
+  // Iterate over obj2 properties and merge
+  for (const key in obj2) {
+    if (Object.prototype.hasOwnProperty.call(obj2, key)) {
+      const value1 = obj1[key];
+      const value2 = obj2[key];
+
       if (
-        obj1[key] &&
-        typeof obj1[key] === "object" &&
-        obj2[key] &&
-        typeof obj2[key] === "object"
+        typeof value1 === "object" &&
+        value1 !== null &&
+        !Array.isArray(value1) &&
+        typeof value2 === "object" &&
+        value2 !== null &&
+        !Array.isArray(value2)
       ) {
-        output[key] = deepMergeObjects(obj1[key], obj2[key]);
+        // Recursively merge objects
+        output[key] = deepMergeObjects(
+          value1 as any,
+          value2 as any
+        ) as T[Extract<keyof T, string>];
       } else {
-        output[key] = obj1[key];
+        // Directly assign the value from obj2
+        output[key] = value2 as T[Extract<keyof T, string>];
       }
     }
   }
 
   return output;
-};
+}
