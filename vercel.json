@@ -10,8 +10,7 @@
       "env": {
         "NEXT_PUBLIC_DISABLE_ESLINT": "true"
       },
-      "outputVerification": false,
-      "ignoreCommand": "./ignore-build.sh"
+      "ignoreCommand": "exit 0"
     }
   }
   
