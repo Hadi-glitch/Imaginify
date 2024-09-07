@@ -1,14 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     eslint: {
-      // Disables ESLint during builds, allowing the build process to continue even with ESLint errors
+      // Disable ESLint during builds
       ignoreDuringBuilds: true,
     },
     typescript: {
-      // Ignores TypeScript errors during the build process, bypassing type checks
+      // Disable TypeScript type checking during builds
       ignoreBuildErrors: true,
     },
-    // You can add other configuration options here if needed
   };
   
   export default nextConfig;
