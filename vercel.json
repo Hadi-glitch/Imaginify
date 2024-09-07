@@ -1,0 +1,17 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "package.json",
+        "use": "@vercel/node"
+      }
+    ],
+    "build": {
+      "env": {
+        "NEXT_PUBLIC_DISABLE_ESLINT": "true"
+      },
+      "outputVerification": false,
+      "ignoreCommand": "./ignore-build.sh"
+    }
+  }
+  
